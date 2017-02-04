@@ -15,10 +15,14 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
 
 public class MainActivity extends AppCompatActivity {
     private static final int PERMISSIONS_REQUEST_CODE = 100;
     SpeakRecog speakRecog;
+
+    private final int MP = ViewGroup.LayoutParams.MATCH_PARENT;
 
 
     @Override
@@ -61,12 +65,16 @@ public class MainActivity extends AppCompatActivity {
     private void getContentsInfo(){
         //初期化
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        SurfaceView surfaceView = (SurfaceView) findViewById(R.id.surfaceView);
-        SurfaceHolder holder = surfaceView.getHolder();
+
         speakRecog = new SpeakRecog();
 
+        FrameLayout framelayout = (FrameLayout)findViewById(R.id.frameLayout);
+        SurfaceView surfaceView = new SurfaceView(this);
+        framelayout.addView(surfaceView, 0, new ViewGroup.LayoutParams(MP, MP));
+        SurfaceHolder holder = surfaceView.getHolder();
+
         holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-        holder.addCallback(new CameraActivity());
+        holder.addCallback(new CameraFunc());
         setSupportActionBar(toolbar);
 
 
