@@ -1,9 +1,11 @@
 package com.example.ryosuke.nakagawa.speaklab;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -20,7 +22,8 @@ import android.widget.FrameLayout;
 
 public class MainActivity extends AppCompatActivity {
     private static final int PERMISSIONS_REQUEST_CODE = 100;
-    SpeakRecog speakRecog;
+    SpeechRecognizer sr;
+    SpeechListener speechListener;
 
     private final int MP = ViewGroup.LayoutParams.MATCH_PARENT;
 
@@ -65,8 +68,9 @@ public class MainActivity extends AppCompatActivity {
     private void getContentsInfo(){
         //初期化
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        speechListener = new SpeechListener(MainActivity.this);
 
-        speakRecog = new SpeakRecog();
+
 
         FrameLayout framelayout = (FrameLayout)findViewById(R.id.frameLayout);
         SurfaceView surfaceView = new SurfaceView(this);
@@ -82,7 +86,12 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                speakRecog.speech();
+                sr = SpeechRecognizer.createSpeechRecognizer(getApplicationContext());
+                sr.setRecognitionListener(speechListener);
+                Intent intent = new Intent(RecognizerIntent.ACTION_GET_LANGUAGE_DETAILS);
+                intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+                intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE,getPackageName());
+                sr.startListening(intent);
             }
         });
     }
