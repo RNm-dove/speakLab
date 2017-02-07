@@ -22,6 +22,7 @@ import android.widget.FrameLayout;
 
 public class MainActivity extends AppCompatActivity {
     private static final int PERMISSIONS_REQUEST_CODE = 100;
+    private static final int PERMISSIONS_REQUEST_CODE2 = 200;
     SpeechRecognizer sr;
     SpeechListener speechListener;
 
@@ -59,6 +60,12 @@ public class MainActivity extends AppCompatActivity {
                     getContentsInfo();
                 }
                 break;
+            case PERMISSIONS_REQUEST_CODE2:
+                Intent intent = new Intent(RecognizerIntent.ACTION_GET_LANGUAGE_DETAILS);
+                intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+                intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE,getPackageName());
+                sr.startListening(intent);
+                break;
             default:
                 break;
         }
@@ -91,7 +98,23 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent = new Intent(RecognizerIntent.ACTION_GET_LANGUAGE_DETAILS);
                 intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
                 intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE,getPackageName());
-                sr.startListening(intent);
+
+                //パーミッションの許可
+                // Android 6.0以降の場合
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    // パーミッションの許可状態を確認する
+                    if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                        // 許可されている
+                        sr.startListening(intent);
+                    } else {
+                        // 許可されていないので許可ダイアログを表示する
+                        requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, PERMISSIONS_REQUEST_CODE2);
+                    }
+                    // Android 5系以下の場合
+                } else {
+                    sr.startListening(intent);
+                }
+
             }
         });
     }
