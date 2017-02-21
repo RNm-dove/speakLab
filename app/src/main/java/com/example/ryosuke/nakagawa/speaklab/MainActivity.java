@@ -7,14 +7,17 @@ import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.hardware.Camera;
 import android.os.Build;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutCompat;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Surface;
@@ -24,8 +27,11 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ZoomControls;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,22 +44,25 @@ public class MainActivity extends AppCompatActivity {
 
     private final int MP = ViewGroup.LayoutParams.MATCH_PARENT;
 
+    Button mButton;
+
     //ダイアログの表示
     final CharSequence[] items = { "あ行", "か行", "さ行","た行","な行","は行","ま行","や行","ら行","わ行" };
-    final CharSequence[] items_a = { "あ", "い", "う","え","お" };
-    final CharSequence[] items_ka = { "か", "き", "く","け","こ" };
-    final CharSequence[] items_sa = { "さ", "し", "す","せ","そ" };
-    final CharSequence[] items_ta = { "た", "ち", "つ","て","と" };
-    final CharSequence[] items_na = { "な", "に", "ぬ","ね","の" };
-    final CharSequence[] items_ha = { "は", "ひ", "ふ","へ","ほ" };
-    final CharSequence[] items_ma = { "ま", "み", "む","め","も" };
-    final CharSequence[] items_ya = { "や", "ゆ", "よ" };
-    final CharSequence[] items_ra ={ "ら", "り", "る","れ","ろ" };
-    final CharSequence[] items_wa = { "わ", "を", "ん" };
+
     CharSequence[] checkedItems;
     String selectLine;              //文字列の保持
     AlertDialog.Builder builder1;
     AlertDialog.Builder builder2;
+
+    Camera camera;
+    final int cameraId = 1;
+
+    private ViewPager mPager;
+    ImageView newImageView;
+    private boolean flag = false;
+    FrameLayout layout;
+
+    AssetManager mAsset;
 
 
 
@@ -104,6 +113,8 @@ public class MainActivity extends AppCompatActivity {
         //初期化
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         speechListener = new SpeechListener(MainActivity.this);
+        setSupportActionBar(toolbar);
+
 
         //surfaceViewを設定
         FrameLayout framelayout = (FrameLayout)findViewById(R.id.frameLayout);
@@ -111,9 +122,16 @@ public class MainActivity extends AppCompatActivity {
         framelayout.addView(surfaceView, 0, new ViewGroup.LayoutParams(MP, MP));
         SurfaceHolder holder = surfaceView.getHolder();
 
+        camera = Camera.open(cameraId);
+
         holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-        holder.addCallback(new CameraFunc());
-        setSupportActionBar(toolbar);
+        holder.addCallback(new CameraFunc(camera));
+
+
+
+
+
+
 
         //ダイアログを表示
         builder1 = new AlertDialog.Builder(MainActivity.this);
@@ -148,8 +166,47 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-    }
 
+        //viewPagerの実装
+        selectLine = "a";
+        CustomPageAdapter adapter = new CustomPageAdapter(this,selectLine);
+        mPager = (ViewPager) findViewById(R.id.viewPager);
+        mPager.setAdapter(adapter);
+
+        layout = (FrameLayout)findViewById(R.id.layout);
+
+        //Buttonの実装
+        mButton =(Button)findViewById(R.id.button);
+        mButton.setText("横の画像を表示する");
+        mButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(flag == false) {
+                    String image = "line_"+selectLine+"/" + String.valueOf(mPager.getCurrentItem()) + "_side.jpg";
+                    newImageView = new ImageView(MainActivity.this);
+                    try {
+                        InputStream is = getResources().getAssets().open(image);
+                        Bitmap bm = BitmapFactory.decodeStream(is);
+                        newImageView.setImageBitmap(bm);
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+
+                    layout.addView(newImageView);
+                    flag = true;
+
+                    mButton.setText("正面の画像を表示する");
+                }else{layout.removeView(newImageView);
+                    flag = false;
+                    mButton.setText("横の画像を表示する");
+                }
+            }
+
+        });
+
+    }
 
     //メニューバーの設定
     @Override
@@ -175,64 +232,48 @@ public class MainActivity extends AppCompatActivity {
                     new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int i) {
+                            if(flag ==true){
+                                layout.removeView(newImageView);
+                            }
+
                             switch (i){
                                 case 0://あ行
-                                    checkedItems = items_a;
                                     selectLine = "a";
                                     break;
                                 case 1:
-                                    checkedItems = items_ka;
                                     selectLine = "ka";
                                     break;//か行
                                 case 2:
-                                    checkedItems = items_sa;
                                     selectLine = "sa";
                                     break;//さ行
                                 case 3:
-                                    checkedItems = items_ta;
                                     selectLine = "ta";
                                     break;//た行
                                 case 4:
-                                    checkedItems = items_na;
                                     selectLine = "na";
                                     break;//な行
                                 case 5:
-                                    checkedItems = items_ha;
                                     selectLine = "ha";
                                     break;//は行
                                 case 6:
-                                    checkedItems = items_ma;
                                     selectLine = "ma";
                                     break;//ま行
                                 case 7:
-                                    checkedItems = items_ya;
                                     selectLine = "ya";
                                     break;//や行
                                 case 8:
-                                    checkedItems = items_ra;
                                     selectLine = "ra";
                                     break;//ら行
                                 case 9:
-                                    checkedItems = items_wa;
                                     selectLine = "wa";
                                     break;//わ行
 
                             }
+                            showImage(selectLine);
 
                         }
                     })
-                    .setPositiveButton("決定",  new DialogInterface.OnClickListener(){
-                        @Override
-                                public void onClick(DialogInterface dialog, int i){
-                            builder2.setTitle("文字を選択してね").setSingleChoiceItems(checkedItems,-1,
-                                    new DialogInterface.OnClickListener(){
-                                        @Override
-                                        public void onClick(DialogInterface dialog,int i){
-                                            showImage(selectLine,i);
-                                        }
-                                    }).setPositiveButton("決定する",null).show();
-                        }
-                    })
+                    .setPositiveButton("決定", null)
                     .show();
 
             return true;
@@ -241,21 +282,15 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public void showImage(String selectLine,int position){
-        AssetManager as = getResources().getAssets();
-        InputStream is = null;
-        String imageSample = "line_"+selectLine+"/sampleImage"+String.valueOf(position+1)+".jpg";
+    public void showImage(String selectLine){
 
-        try{
-            is = as.open(imageSample);
-        } catch (IOException e){
-            e.printStackTrace();
-        }
+        CustomPageAdapter adapter = (CustomPageAdapter) mPager.getAdapter();
+        adapter.set(selectLine);
+        adapter.notifyDataSetChanged();
 
-        Bitmap bm = BitmapFactory.decodeStream(is);
-
-        ImageView imageView = (ImageView)findViewById(R.id.imageView);
-        imageView.setAlpha(0.7f);
-        imageView.setImageBitmap(bm);
+        flag = false;
+        mButton.setText("横の画像を表示する");
     }
+
+
 }

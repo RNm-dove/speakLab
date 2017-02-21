@@ -16,12 +16,17 @@ import java.util.List;
 public class CameraFunc implements SurfaceHolder.Callback {
 
                 Camera camera;
+                final int cameraId = 1;
+
+    public CameraFunc(Camera camera){
+        this.camera = camera;
+    }
 
                 @Override
             public void surfaceCreated(SurfaceHolder holder) {
                 // TODO Auto-generated method stub
-                int cameraId = 1;
-                camera = Camera.open(cameraId);
+                   // camera= Camera.open(cameraId);
+
                 // ディスプレイの向き設定
                 setCameraDisplayOrientation(cameraId);
                 try {
